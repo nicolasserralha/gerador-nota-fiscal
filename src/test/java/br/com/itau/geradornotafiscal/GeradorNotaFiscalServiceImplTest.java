@@ -1,4 +1,4 @@
-package br.com.itau.calculadoratributos;
+package br.com.itau.geradornotafiscal;
 
 import br.com.itau.geradornotafiscal.model.*;
 import br.com.itau.geradornotafiscal.service.CalculadoraAliquotaProduto;
@@ -9,13 +9,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
 
 public class GeradorNotaFiscalServiceImplTest {
 
@@ -29,8 +26,6 @@ public class GeradorNotaFiscalServiceImplTest {
     public void setup() {
         MockitoAnnotations.openMocks(this);
     }
-
-
 
     @Test
     public void shouldGenerateNotaFiscalForTipoPessoaFisicaWithValorTotalItensLessThan500() {
@@ -91,4 +86,64 @@ public class GeradorNotaFiscalServiceImplTest {
         assertEquals(0.20 * item.getValorUnitario(), notaFiscal.getItens().get(0).getValorTributoItem());
     }
 
+    @Test
+    public void shouldGenerateNotaFiscalForTipoPessoaJuridicaWithRegimeTributacaoLucroPresumidoAndValorTotalItensGreaterThan5000AndSixItens() {
+        Pedido pedido = new Pedido();
+        pedido.setValorTotalItens(6000);
+        pedido.setValorFrete(100);
+        Destinatario destinatario = new Destinatario();
+        destinatario.setTipoPessoa(TipoPessoa.JURIDICA);
+        destinatario.setRegimeTributacao(RegimeTributacaoPJ.LUCRO_PRESUMIDO);
+
+        // Create and add Endereco to the Destinatario
+        Endereco endereco = new Endereco();
+        endereco.setFinalidade(Finalidade.ENTREGA);
+        endereco.setRegiao(Regiao.SUDESTE);
+        destinatario.setEnderecos(Arrays.asList(endereco));
+
+        pedido.setDestinatario(destinatario);
+
+        // Create and add items to the Pedido
+
+        ArrayList<Item> listaItens = new ArrayList<Item>();
+
+        Item item = new Item();
+        item.setValorUnitario(1000);
+        item.setQuantidade(6);
+        listaItens.add(item);
+
+        item = new Item();
+        item.setValorUnitario(1000);
+        item.setQuantidade(6);
+        listaItens.add(item);
+
+        item = new Item();
+        item.setValorUnitario(1000);
+        item.setQuantidade(6);
+        listaItens.add(item);
+
+        item = new Item();
+        item.setValorUnitario(1000);
+        item.setQuantidade(6);
+        listaItens.add(item);
+
+        item = new Item();
+        item.setValorUnitario(1000);
+        item.setQuantidade(6);
+        listaItens.add(item);
+
+        item = new Item();
+        item.setValorUnitario(1000);
+        item.setQuantidade(6);
+        listaItens.add(item);
+
+        pedido.setItens(listaItens);
+
+        NotaFiscal notaFiscal = geradorNotaFiscalService.gerarNotaFiscal(pedido);
+
+        assertEquals(pedido.getValorTotalItens(), notaFiscal.getValorTotalItens());
+        assertEquals(6, notaFiscal.getItens().size());
+        assertEquals(0.20 * item.getValorUnitario(), notaFiscal.getItens().get(0).getValorTributoItem());
+    }
 }
+
