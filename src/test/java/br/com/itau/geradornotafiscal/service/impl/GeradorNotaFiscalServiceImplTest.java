@@ -5,6 +5,7 @@ import br.com.itau.geradornotafiscal.factory.ItemNotaFiscalFactory;
 import br.com.itau.geradornotafiscal.factory.NotaFiscalFactory;
 import br.com.itau.geradornotafiscal.model.*;
 import br.com.itau.geradornotafiscal.service.*;
+import br.com.itau.geradornotafiscal.validation.ValidadorPedido;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,6 +47,9 @@ public class GeradorNotaFiscalServiceImplTest {
 
     @InjectMocks
     private GeradorNotaFiscalServiceImpl geradorNotaFiscalService;
+
+    @Mock
+    private ValidadorPedido validadorPedido;
 
     private Pedido pedido;
     private NotaFiscal notaFiscalEsperada;
@@ -104,103 +108,7 @@ public class GeradorNotaFiscalServiceImplTest {
         testarFalhaNoServico(FinanceiroNotaFiscalException.class, "Erro ao enviar a nota fiscal para o financeiro", financeiroService, "Erro no financeiro");
     }
 
-    @Test
-    void deveLancarPedidoInvalidoExceptionQuandoPedidoForNulo() {
-        Pedido pedidoNulo = null;
-        PedidoInvalidoException exception = assertThrows(PedidoInvalidoException.class, () -> {
-            geradorNotaFiscalService.gerarNotaFiscal(pedidoNulo);
-        });
-        assertEquals("Pedido não pode ser nulo.", exception.getMessage());
-    }
 
-    @Test
-    void deveLancarExcecaoQuandoDestinatarioForNulo() {
-        pedido.setDestinatario(null);
-
-        PedidoInvalidoException exception = assertThrows(PedidoInvalidoException.class, () ->
-                geradorNotaFiscalService.gerarNotaFiscal(pedido)
-        );
-        assertEquals("Destinatário do pedido não pode ser nulo.", exception.getMessage());
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoTipoPessoaForNulo() {
-        Destinatario destinatario = pedido.getDestinatario();
-        destinatario.setTipoPessoa(null);
-
-        PedidoInvalidoException exception = assertThrows(PedidoInvalidoException.class, () ->
-                geradorNotaFiscalService.gerarNotaFiscal(pedido)
-        );
-        assertEquals("Tipo de pessoa do destinatário não pode ser nulo.", exception.getMessage());
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoTipoPessoaForJuridicaSemRegimeTributario() {
-        Destinatario destinatario = pedido.getDestinatario();
-        destinatario.setTipoPessoa(TipoPessoa.JURIDICA);
-        destinatario.setRegimeTributacao(null);
-
-        PedidoInvalidoException exception = assertThrows(PedidoInvalidoException.class, () ->
-                geradorNotaFiscalService.gerarNotaFiscal(pedido)
-        );
-        assertEquals("Regime tributário não pode ser nulo para pessoas jurídicas.", exception.getMessage());
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoValorTotalItensForZero() {
-        pedido.setValorTotalItens(BigDecimal.valueOf(0.0));
-
-        PedidoInvalidoException exception = assertThrows(PedidoInvalidoException.class, () ->
-                geradorNotaFiscalService.gerarNotaFiscal(pedido)
-        );
-        assertEquals("Valor total dos itens deve ser maior que zero.", exception.getMessage());
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoValorFreteForNegativo() {
-        pedido.setValorFrete(BigDecimal.valueOf(-10.0));
-
-        PedidoInvalidoException exception = assertThrows(PedidoInvalidoException.class, () ->
-                geradorNotaFiscalService.gerarNotaFiscal(pedido)
-        );
-        assertEquals("Valor do frete não pode ser negativo.", exception.getMessage());
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoListaDeEnderecosForVazia() {
-        pedido.getDestinatario().setEnderecos(Collections.emptyList());
-
-        PedidoInvalidoException exception = assertThrows(PedidoInvalidoException.class, () ->
-                geradorNotaFiscalService.gerarNotaFiscal(pedido)
-        );
-        assertEquals("Destinatário deve conter ao menos um endereço.", exception.getMessage());
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoNaoHouverEnderecoComFinalidadeEntregaOuCobrancaEntrega() {
-        Endereco endereco = new Endereco();
-        endereco.setFinalidade(Finalidade.COBRANCA); // inválida para entrega
-        pedido.getDestinatario().setEnderecos(Collections.singletonList(endereco));
-
-        PedidoInvalidoException exception = assertThrows(PedidoInvalidoException.class, () ->
-                geradorNotaFiscalService.gerarNotaFiscal(pedido)
-        );
-        assertEquals("Destinatário deve conter pelo menos um endereço com finalidade de ENTREGA ou COBRANCA_ENTREGA.", exception.getMessage());
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoNaoHouverEnderecoComFinalidadeEntregaOuCobrancaEntregaSemRegiao() {
-        Endereco endereco = new Endereco();
-        endereco.setFinalidade(Finalidade.ENTREGA);
-        pedido.getDestinatario().setEnderecos(Collections.singletonList(endereco));
-
-        // Espera-se que a exceção seja lançada
-        PedidoInvalidoException exception = assertThrows(PedidoInvalidoException.class, () -> {
-            geradorNotaFiscalService.gerarNotaFiscal(pedido);
-        });
-
-        assertEquals("Região não pode ser nula para o endereço de entrega.", exception.getMessage());
-    }
     private void testarFalhaNoServico(Class<? extends RuntimeException> excecaoEsperada, String mensagemEsperada, Object servicoMock, String erro) {
         NotaFiscal notaFiscalMock = mock(NotaFiscal.class);
         List<ItemNotaFiscal> itens = Collections.singletonList(mock(ItemNotaFiscal.class));
