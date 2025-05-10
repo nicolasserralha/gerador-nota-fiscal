@@ -66,3 +66,5 @@ O valor total dos itens vem do payload, mas como os itens estavam sendo acumulad
 Troca dos tipos dos atributos de valores de ***double*** para ***BigDecimal*** para evitar problemas de precisão nos cálculos.
 
 Adicionei um tratamento de erro simples na controller
+
+Criação de classe para validar o pedido
