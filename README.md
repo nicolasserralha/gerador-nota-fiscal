@@ -57,6 +57,12 @@ Após resolver esses dois pontos, o problema deixou de ocorrer.
 
 ### 4. Inconsistência nos valores da nota e quantidade de itens
 
-O valor total dos itens vinha do payload, mas como os itens estavam sendo acumulados por conta da lista estática, o número de itens da nota e o total acabavam divergentes.
+O valor total dos itens vem do payload, mas como os itens estavam sendo acumulados por conta da lista estática, o número de itens da nota e o total acabavam divergentes.
 
 **Solução:** A lógica foi ajustada para processar apenas os itens recebidos em cada requisição, garantindo consistência entre o valor informado e a lista de itens.
+
+### 5. Demais alterações 
+
+Troca dos tipos dos atributos de valores de ***double*** para ***BigDecimal*** para evitar problemas de precisão nos cálculos.
+
+Adicionei um tratamento de erro simples na controller
