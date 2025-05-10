@@ -5,6 +5,8 @@ import br.com.itau.geradornotafiscal.factory.NotaFiscalFactory;
 import br.com.itau.geradornotafiscal.model.*;
 import br.com.itau.geradornotafiscal.service.*;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,8 +46,8 @@ public class GeradorNotaFiscalServiceImpl implements GeradorNotaFiscalService {
 
         validarPedido(pedido);
 
-        double valorAliquota = calculadoraAliquotaService.calcularAliquota(pedido);
-        double valorFrete = calculadoraFreteService.calcularFrete(pedido);
+        BigDecimal valorAliquota = calculadoraAliquotaService.calcularAliquota(pedido);
+        BigDecimal valorFrete = calculadoraFreteService.calcularFrete(pedido);
         List<ItemNotaFiscal> itensNotaFiscal = itemNotaFiscalFactory.gerarItensNotaFiscal(pedido, valorAliquota);
         NotaFiscal notaFiscal = notaFiscalFactory.criarNotaFiscal(pedido, itensNotaFiscal, valorFrete);
 
@@ -97,11 +99,11 @@ public class GeradorNotaFiscalServiceImpl implements GeradorNotaFiscalService {
             }
         }
 
-        if (pedido.getValorTotalItens() <= 0) {
+        if (pedido.getValorTotalItens().compareTo(BigDecimal.ZERO) <= 0) {
             throw new PedidoInvalidoException("Valor total dos itens deve ser maior que zero.");
         }
 
-        if (pedido.getValorFrete() < 0) {
+        if (pedido.getValorFrete().compareTo(BigDecimal.ZERO) < 0) {
             throw new PedidoInvalidoException("Valor do frete não pode ser negativo.");
         }
 

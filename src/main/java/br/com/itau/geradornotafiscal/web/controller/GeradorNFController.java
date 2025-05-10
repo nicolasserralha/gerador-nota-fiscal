@@ -1,7 +1,9 @@
 package br.com.itau.geradornotafiscal.web.controller;
 
+import br.com.itau.geradornotafiscal.exception.PedidoInvalidoException;
 import br.com.itau.geradornotafiscal.model.NotaFiscal;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import br.com.itau.geradornotafiscal.model.Pedido;
 import br.com.itau.geradornotafiscal.service.GeradorNotaFiscalService;
@@ -16,20 +18,27 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/pedido")
 public class GeradorNFController {
 
-	@Autowired
-	private GeradorNotaFiscalService notaFiscalService;
+	private static final Logger logger = LoggerFactory.getLogger(GeradorNFController.class);
+
+	private final GeradorNotaFiscalService notaFiscalService;
+
+	public GeradorNFController(GeradorNotaFiscalService notaFiscalService) {
+		this.notaFiscalService = notaFiscalService;
+	}
 
 	@PostMapping("/gerarNotaFiscal")
-	public ResponseEntity<NotaFiscal> gerarNotaFiscal(@RequestBody Pedido pedido) {
-		// Lógica de processamento do pedido
-		// Aqui você pode realizar as operações desejadas com o objeto Pedido
-		// Exemplo de retorno
-
-		String message = "Nota fiscal gerada com sucesso para o pedido: " + pedido.getIdPedido();
-		System.out.println(message);
-
-		NotaFiscal notaFiscal = notaFiscalService.gerarNotaFiscal(pedido);
-		return new ResponseEntity<>(notaFiscal, HttpStatus.OK);
+	public ResponseEntity<?> gerarNotaFiscal(@RequestBody Pedido pedido) {
+		try {
+			NotaFiscal notaFiscal = notaFiscalService.gerarNotaFiscal(pedido);
+			logger.info("Nota fiscal gerada com sucesso para o pedido: {}", pedido.getIdPedido());
+			return ResponseEntity.ok(notaFiscal);
+		} catch (PedidoInvalidoException ex) {
+			logger.info("Pedido Invalido: {}", ex.getMessage());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+		} catch (Exception ex) {
+			logger.info("Erro: {}", ex.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro inesperado ao gerar a nota fiscal.");
+		}
 	}
-	
 }
+
